@@ -1,0 +1,14 @@
+<adapter-config name="dbReference_TR" adapter="db" wsdlLocation="../WSDLs/dbReference_TR.wsdl" xmlns="http://platform.integration.oracle/blocks/adapter/fw/metadata">
+  
+  <connection-factory UIConnectionName="RDB_TR" location="eis/DB/RDB_TR"/>
+  <endpoint-interaction portType="dbReference_TR_ptt" operation="dbReference_TRSelect">
+    <interaction-spec className="oracle.tip.adapter.db.DBReadInteractionSpec">
+      <property name="DescriptorName" value="dbReference_TR.TimeRate"/>
+      <property name="QueryName" value="dbReference_TRSelect"/>
+      <property name="MappingsMetaDataURL" value="dbReference_TR-or-mappings.xml"/>
+      <property name="ReturnSingleResultSet" value="false"/>
+      <property name="GetActiveUnitOfWork" value="false"/>
+    </interaction-spec>
+  </endpoint-interaction>
+
+</adapter-config>

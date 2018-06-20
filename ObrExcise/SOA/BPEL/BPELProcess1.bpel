@@ -1,0 +1,155 @@
+<?xml version = "1.0" encoding = "UTF-8" ?>
+<!--
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  Oracle JDeveloper BPEL Designer 
+  
+  Created: Wed Jun 20 09:03:25 ICT 2018
+  Author:  Benyapa
+  Type: BPEL 2.0 Process
+  Purpose: Synchronous BPEL Process
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+-->
+<process name="BPELProcess1"
+               targetNamespace="http://xmlns.oracle.com/ObrExcise/ObrExcise/BPELProcess1"
+               xmlns="http://docs.oasis-open.org/wsbpel/2.0/process/executable"
+               xmlns:client="http://xmlns.oracle.com/ObrExcise/ObrExcise/BPELProcess1"
+               xmlns:ora="http://schemas.oracle.com/xpath/extension"
+               xmlns:ui="http://xmlns.oracle.com/soa/designer"
+               xmlns:bpelx="http://schemas.oracle.com/bpel/extension"
+         xmlns:bpel="http://docs.oasis-open.org/wsbpel/2.0/process/executable"
+         xmlns:ns1="http://xmlns.oracle.com/pcbpel/adapter/db/ObrExcise/ObrExcise/dbReference_TR"
+         xmlns:ns2="http://xmlns.oracle.com/pcbpel/adapter/db/ObrExcise/ObrExcise/dbReference_LR"
+         xmlns:ns3="http://xmlns.oracle.com/pcbpel/adapter/db/top/dbReference_TR"
+         xmlns:ns4="http://xmlns.oracle.com/pcbpel/adapter/db/top/dbReference_LR" xmlns:ns5="http://www.excise.go.th"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <!-- 
+      ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        PARTNERLINKS                                                      
+        List of services participating in this BPEL process               
+      ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    -->
+
+  <!-- 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+      VARIABLES                                                        
+      List of messages and XML documents used within this BPEL process 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  -->
+  <import namespace="http://www.excise.go.th" location="../Schemas/obrExcise.xsd"
+          importType="http://www.w3.org/2001/XMLSchema"/>
+  <import namespace="http://xmlns.oracle.com/pcbpel/adapter/db/top/dbReference_LR"
+          location="../Schemas/dbReference_LR_table.xsd" importType="http://www.w3.org/2001/XMLSchema"/>
+  <import namespace="http://xmlns.oracle.com/pcbpel/adapter/db/top/dbReference_TR"
+          location="../Schemas/dbReference_TR_table.xsd" importType="http://www.w3.org/2001/XMLSchema"/>
+  <partnerLinks>
+    <partnerLink name="RestService" partnerLinkType="client:BPELProcess1" myRole="BPELProcess1Provider"/>
+    <partnerLink name="dbReference_TR" partnerLinkType="ns1:dbReference_TR_plt" partnerRole="dbReference_TR_role"/>
+    <partnerLink name="dbReference_LR" partnerLinkType="ns2:dbReference_LR_plt" partnerRole="dbReference_LR_role"/>
+  </partnerLinks>
+  <variables>
+    <!-- Reference to the message passed as input during initiation -->
+    <variable name="inputVariable" messageType="client:BPELProcess1RequestMessage"/>
+
+    <!-- Reference to the message that will be returned to the requester-->
+    <variable name="outputVariable" messageType="client:BPELProcess1ResponseMessage"/>
+    <variable name="inputTR"
+              element="ns3:dbReference_TRSelect_DutyCode_TypeCode_SettypeCode_SubtypeCode_CalDateInputParameters"/>
+    <variable name="outputTR" element="ns3:TimeRateCollection"/>
+    <variable name="inputLR" element="ns4:dbReference_LRSelect_offcode_inccode_CalDateInputParameters"/>
+    <variable name="output" element="ns4:LocalrateCollection"/>
+    <variable name="typeInputMD" type="ns5:inputMD"/>
+    <variable name="MDinput" element="ns5:InputMD"/>
+  </variables>
+
+  <!-- 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+     ORCHESTRATION LOGIC                                               
+     Set of activities coordinating the flow of messages across the    
+     services integrated within this business process                  
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  -->
+  <sequence name="main">
+
+    <!-- Receive input from requestor. (Note: This maps to operation defined in BPELProcess1.wsdl) -->
+    <receive name="receiveInput" partnerLink="RestService" portType="client:BPELProcess1" operation="process" variable="inputVariable" createInstance="yes"/>
+    <assign name="Assign1">
+      <copy>
+        <from>$inputVariable.payload/ns5:ProductInfo/ns5:CalDate</from>
+        <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$inputTR/ns3:CalDate</to>
+      </copy>
+      <copy>
+        <from>substring($inputVariable.payload/ns5:ProductInfo/ns5:ProductCode,1,4)</from>
+        <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$inputTR/ns3:DutyCode</to>
+      </copy>
+      <copy>
+        <from>substring($inputVariable.payload/ns5:ProductInfo/ns5:ProductCode,5,2)</from>
+        <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$inputTR/ns3:TypeCode</to>
+      </copy>
+      <copy>
+        <from>substring($inputVariable.payload/ns5:ProductInfo/ns5:ProductCode,7,2)</from>
+        <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$inputTR/ns3:SubtypeCode</to>
+      </copy>
+      <copy>
+        <from>substring($inputVariable.payload/ns5:ProductInfo/ns5:ProductCode,9,2)</from>
+        <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$inputTR/ns3:SettypeCode</to>
+      </copy>
+    </assign>
+    <invoke name="Invoke1" partnerLink="dbReference_TR" portType="ns1:dbReference_TR_ptt"
+            operation="dbReference_TRSelect" inputVariable="inputTR" outputVariable="outputTR"
+            bpelx:invokeAsDetail="no"/>
+    <assign name="Assign2">
+      <copy>
+        <from>$inputVariable.payload/ns5:ProductInfo/ns5:CalDate</from>
+        <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$inputLR/ns4:CalDate</to>
+      </copy>
+      <copy>
+        <from>$inputVariable.payload/ns5:LocalTax/ns5:OffCode</from>
+        <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$inputLR/ns4:offcode</to>
+      </copy>
+      <copy>
+        <from>$inputVariable.payload/ns5:LocalTax/ns5:IncCode</from>
+        <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$inputLR/ns4:inccode</to>
+      </copy>
+      <copy>
+        <from>$outputTR/ns3:TimeRate/ns3:rateValue</from>
+        <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$MDinput/ns5:ValueRate</to>
+      </copy>
+      <copy>
+        <from>$outputTR/ns3:TimeRate/ns3:rateQuantity</from>
+        <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$MDinput/ns5:QuantityRate</to>
+      </copy>
+    </assign>
+    <invoke name="Invoke2" partnerLink="dbReference_LR" portType="ns2:dbReference_LR_ptt"
+            operation="dbReference_LRSelect" inputVariable="inputLR" outputVariable="output" bpelx:invokeAsDetail="no"/>
+    <assign name="Assign3">
+      <copy>
+        <from>$output/ns4:Localrate/ns4:locRate</from>
+        <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$MDinput/ns5:localRate</to>
+      </copy>
+      <copy>
+        <from>$MDinput/ns5:ValueRate</from>
+        <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$MDinput/ns5:ValueRate</to>
+      </copy>
+      <copy>
+        <from>$MDinput/ns5:QuantityRate</from>
+        <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$MDinput/ns5:QuantityRate</to>
+      </copy>
+    </assign>
+    <assign name="Assign4">
+      <copy>
+        <from>$MDinput/ns5:localRate</from>
+        <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$outputVariable.payload/ns5:localTax</to>
+      </copy>
+      <copy>
+        <from>$MDinput/ns5:ValueRate</from>
+        <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$outputVariable.payload/ns5:ValueRate</to>
+      </copy>
+      <copy>
+        <from>$MDinput/ns5:QuantityRate</from>
+        <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$outputVariable.payload/ns5:QuantityRate</to>
+      </copy>
+    </assign>
+    <!-- Generate reply to synchronous request -->
+    <reply name="replyOutput" partnerLink="RestService" portType="client:BPELProcess1" operation="process" variable="outputVariable"/>
+  </sequence>
+</process>
